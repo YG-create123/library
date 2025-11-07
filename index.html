@@ -35,6 +35,8 @@
         .btn-add:hover { background: #27ae60; }
         .btn-delete { background: #e74c3c; color: white; }
         .btn-delete:hover { background: #c0392b; }
+        .btn-return { background: #f39c12; color: white; }
+        .btn-return:hover { background: #e67e22; }
         
         .search-box { background: white; padding: 1.5rem; border-radius: 8px; margin: 1.5rem 0; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .search-container { display: flex; }
@@ -69,13 +71,13 @@
         .modal-body { padding: 1.5rem; }
         .book-detail-info h3 { margin-bottom: 1rem; color: #2c3e50; }
         .book-detail-info p { margin-bottom: 0.8rem; }
-        .action-buttons { margin-top: 1.5rem; display: flex; gap: 10px; }
+        .action-buttons { margin-top: 1.5rem; display: flex; gap: 10px; flex-wrap: wrap; }
         
         .login-form { max-width: 400px; margin: 2rem auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         .login-form h2 { text-align: center; margin-bottom: 1.5rem; color: #2c3e50; }
         .form-group { margin-bottom: 1rem; }
         .form-group label { display: block; margin-bottom: 0.5rem; color: #555; }
-        .form-group input { width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; }
+        .form-group input, .form-group select { width: 100%; padding: 0.8rem; border: 1px solid #ddd; border-radius: 4px; font-size: 1rem; }
         
         footer { background: #2c3e50; color: white; text-align: center; padding: 1.5rem 0; margin-top: 2rem; }
         
@@ -139,6 +141,67 @@
             margin-bottom: 0.5rem;
             color: #2c3e50;
         }
+        
+        /* 借阅者信息样式 */
+        .borrower-info {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 0.8rem;
+            margin-top: 0.5rem;
+            font-size: 0.9rem;
+        }
+        
+        /* 借阅记录表格样式 */
+        .borrow-records {
+            margin-top: 2rem;
+        }
+        
+        .records-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .records-table th, .records-table td {
+            padding: 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .records-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .records-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .empty-records {
+            text-align: center;
+            padding: 2rem;
+            color: #777;
+            font-style: italic;
+        }
+        
+        /* 页面内容样式 */
+        .page-content {
+            display: block;
+        }
+        
+        .page-content.hidden {
+            display: none;
+        }
+        
+        .nav-link.active {
+            color: #3498db !important;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
@@ -147,9 +210,9 @@
             <div class="logo">图书<span>管理</span>系统</div>
             <nav>
                 <ul>
-                    <li><a href="#">首页</a></li>
-                    <li><a href="#">图书管理</a></li>
-                    <li><a href="#">借阅记录</a></li>
+                    <li><a href="#" class="nav-link active" data-page="books">图书浏览</a></li>
+                    <li><a href="#" class="nav-link" data-page="records">借阅记录</a></li>
+                    <li><a href="#" class="nav-link" data-page="users">用户管理</a></li>
                 </ul>
             </nav>
             <div class="user-info">
@@ -162,42 +225,80 @@
     </header>
 
     <div class="container">
-        <div class="search-box">
-            <div class="search-container">
-                <input type="text" id="searchInput" placeholder="搜索书名、作者...">
-                <button id="searchButton">搜索</button>
+        <!-- 图书浏览页面 -->
+        <div id="books-page" class="page-content">
+            <div class="search-box">
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="搜索书名、作者...">
+                    <button id="searchButton">搜索</button>
+                </div>
+            </div>
+
+            <div class="admin-controls" id="adminControls" style="display:none">
+                <button class="btn btn-add" id="addBookBtn">添加图书</button>
+                <button class="btn btn-admin" id="viewRecordsBtn">查看借阅记录</button>
+            </div>
+
+            <div class="main-content">
+                <aside class="sidebar">
+                    <div class="categories">
+                        <h3>图书分类</h3>
+                        <ul>
+                            <li><a href="#" class="category-link" data-category="全部">全部图书</a></li>
+                            <li><a href="#" class="category-link" data-category="文学小说">文学小说</a></li>
+                            <li><a href="#" class="category-link" data-category="科学技术">科学技术</a></li>
+                            <li><a href="#" class="category-link" data-category="历史传记">历史传记</a></li>
+                            <li><a href="#" class="category-link" data-category="经济管理">经济管理</a></li>
+                            <li><a href="#" class="category-link" data-category="艺术设计">艺术设计</a></li>
+                        </ul>
+                    </div>
+                    
+                    <div class="statistics" style="margin-top: 2rem;">
+                        <h3>统计信息</h3>
+                        <p>总藏书量: <strong id="totalBooks">16</strong> 本</p>
+                        <p>可借图书: <strong id="availableBooks">11</strong> 本</p>
+                        <p>借出图书: <strong id="borrowedBooks">5</strong> 本</p>
+                    </div>
+                </aside>
+
+                <section class="books-section">
+                    <h2 style="margin-bottom: 1rem;">图书列表</h2>
+                    <div class="books-grid" id="booksGrid"></div>
+                </section>
             </div>
         </div>
-
-        <div class="admin-controls" id="adminControls" style="display:none">
-            <button class="btn btn-add" id="addBookBtn">添加图书</button>
+        
+        <!-- 借阅记录页面 -->
+        <div id="records-page" class="page-content hidden">
+            <div class="borrow-records">
+                <h2>借阅记录</h2>
+                <div id="recordsContainer">
+                    <table class="records-table">
+                        <thead>
+                            <tr>
+                                <th>图书名称</th>
+                                <th>作者</th>
+                                <th>借阅者</th>
+                                <th>借阅日期</th>
+                                <th>状态</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="recordsBody">
+                            <!-- 借阅记录将通过JavaScript动态生成 -->
+                        </tbody>
+                    </table>
+                    <div id="emptyRecords" class="empty-records">
+                        暂无借阅记录
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <div class="main-content">
-            <aside class="sidebar">
-                <div class="categories">
-                    <h3>图书分类</h3>
-                    <ul>
-                        <li><a href="#" class="category-link" data-category="文学小说">文学小说</a></li>
-                        <li><a href="#" class="category-link" data-category="科学技术">科学技术</a></li>
-                        <li><a href="#" class="category-link" data-category="历史传记">历史传记</a></li>
-                        <li><a href="#" class="category-link" data-category="经济管理">经济管理</a></li>
-                        <li><a href="#" class="category-link" data-category="艺术设计">艺术设计</a></li>
-                    </ul>
-                </div>
-                
-                <div class="statistics" style="margin-top: 2rem;">
-                    <h3>统计信息</h3>
-                    <p>总藏书量: <strong id="totalBooks">16</strong> 本</p>
-                    <p>可借图书: <strong id="availableBooks">11</strong> 本</p>
-                    <p>借出图书: <strong id="borrowedBooks">5</strong> 本</p>
-                </div>
-            </aside>
-
-            <section class="books-section">
-                <h2 style="margin-bottom: 1rem;">图书列表</h2>
-                <div class="books-grid" id="booksGrid"></div>
-            </section>
+        
+        <!-- 用户管理页面 -->
+        <div id="users-page" class="page-content hidden">
+            <h2>用户管理</h2>
+            <p style="margin-top: 1rem; color: #666;">用户管理功能正在开发中...</p>
         </div>
     </div>
 
@@ -271,9 +372,13 @@
                     <p><strong>出版日期:</strong> <span id="modalPublishDate"></span></p>
                     <p><strong>分类:</strong> <span id="modalCategory"></span></p>
                     <p><strong>状态:</strong> <span id="modalStatus"></span></p>
+                    <div id="borrowerInfo" class="borrower-info" style="display: none;">
+                        <strong>借阅者:</strong> <span id="modalBorrower"></span>
+                    </div>
                     <div class="action-buttons">
                         <button class="btn btn-primary" id="borrowBtn">借阅</button>
                         <button class="btn btn-primary" id="reserveBtn">预约</button>
+                        <button class="btn btn-return" id="returnBtn" style="display:none">还书</button>
                     </div>
                 </div>
             </div>
@@ -303,7 +408,13 @@
                     </div>
                     <div class="form-group">
                         <label for="bookCategory">分类</label>
-                        <input type="text" id="bookCategory" placeholder="请输入分类">
+                        <select id="bookCategory" class="form-group input">
+                            <option value="文学小说">文学小说</option>
+                            <option value="科学技术">科学技术</option>
+                            <option value="历史传记">历史传记</option>
+                            <option value="经济管理">经济管理</option>
+                            <option value="艺术设计">艺术设计</option>
+                        </select>
                     </div>
                     <div class="form-group">
                         <label for="bookImage">图片URL</label>
@@ -318,6 +429,29 @@
         </div>
     </div>
 
+    <!-- 管理员借书模态框 -->
+    <div class="modal" id="adminBorrowModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>管理员借书</h2>
+                <button class="modal-close" id="adminBorrowClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="login-form">
+                    <h3 id="adminBorrowBookTitle"></h3>
+                    <div class="form-group">
+                        <label for="borrowerName">借阅者姓名</label>
+                        <input type="text" id="borrowerName" placeholder="请输入借阅者姓名">
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" id="submitAdminBorrow">确认借书</button>
+                        <button class="btn btn-secondary" id="cancelAdminBorrow">取消</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <footer>
         <div class="container">
             <p>© 2023 图书管理系统 - 在线图书借阅平台</p>
@@ -325,7 +459,7 @@
     </footer>
 
     <script>
-        // 图书数据 - 总共16本书（原6本 + 新加10本）
+        // 图书数据 - 总共16本书
         let books = [
             {
                 id: 1,
@@ -354,7 +488,7 @@
                 publisher: "作家出版社",
                 publishDate: "2012-08",
                 category: "文学小说",
-                status: "borrowed",
+                status: "available",
                 image: "https://images.unsplash.com/photo-1512820790803-83ca734da794?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
             },
             {
@@ -384,10 +518,9 @@
                 publisher: "中信出版社",
                 publishDate: "2018-01",
                 category: "经济管理",
-                status: "borrowed",
+                status: "available",
                 image: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
             },
-            // 新增的10本书
             {
                 id: 7,
                 title: "百年孤独",
@@ -405,7 +538,7 @@
                 publisher: "北京十月文艺出版社",
                 publishDate: "2010-04",
                 category: "文学小说",
-                status: "borrowed",
+                status: "available",
                 image: "https://images.unsplash.com/photo-1516979187457-637abb4f9353?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
             },
             {
@@ -435,7 +568,7 @@
                 publisher: "浙江人民出版社",
                 publishDate: "2009-04",
                 category: "历史传记",
-                status: "borrowed",
+                status: "available",
                 image: "https://images.unsplash.com/photo-1506784365847-bbad939e9335?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
             },
             {
@@ -465,7 +598,7 @@
                 publisher: "上海人民出版社",
                 publishDate: "2006-05",
                 category: "文学小说",
-                status: "borrowed",
+                status: "available",
                 image: "https://images.unsplash.com/photo-1514907283155-ea5f0a3c0d59?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=600&q=80"
             },
             {
@@ -490,18 +623,32 @@
             }
         ];
 
+        // 借阅者名单
+        const borrowers = ["轩辕青锋", "慕容云海", "南宫问天", "东方白羽", "西门吹雪"];
+        
+        // 借阅记录
+        let borrowRecords = [];
+        
         // 用户状态
         let currentUser = null;
         let isAdminMode = false;
+        
+        // 当前显示的图书数据
+        let currentBooks = [...books];
+        // 当前选中的图书ID（用于管理员借书）
+        let currentBookId = null;
 
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
+            // 随机分配借阅者
+            assignRandomBorrowers();
+            
             // 页面加载后自动显示登录弹窗
             setTimeout(() => {
                 document.getElementById('autoLoginModal').style.display = 'flex';
             }, 500);
             
-            renderBooks(books);
+            renderBooks(currentBooks);
             updateStatistics();
             
             // 搜索功能
@@ -543,10 +690,10 @@
             });
             
             // 借阅按钮
-            document.getElementById('borrowBtn').addEventListener('click', function() {
-                alert('借阅成功！');
-                closeBookModal();
-            });
+            document.getElementById('borrowBtn').addEventListener('click', borrowBook);
+            
+            // 还书按钮
+            document.getElementById('returnBtn').addEventListener('click', returnBook);
             
             // 预约按钮
             document.getElementById('reserveBtn').addEventListener('click', function() {
@@ -571,12 +718,83 @@
                     filterByCategory(category);
                 });
             });
+            
+            // 页面导航
+            document.querySelectorAll('.nav-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = this.getAttribute('data-page');
+                    showPage(page);
+                    
+                    // 更新导航激活状态
+                    document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                    this.classList.add('active');
+                });
+            });
+            
+            // 查看借阅记录按钮
+            document.getElementById('viewRecordsBtn').addEventListener('click', function() {
+                showPage('records');
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                document.querySelector('.nav-link[data-page="records"]').classList.add('active');
+            });
+            
+            // 管理员借书模态框
+            document.getElementById('adminBorrowClose').addEventListener('click', closeAdminBorrowModal);
+            document.getElementById('cancelAdminBorrow').addEventListener('click', closeAdminBorrowModal);
+            document.getElementById('submitAdminBorrow').addEventListener('click', submitAdminBorrow);
+            document.getElementById('adminBorrowModal').addEventListener('click', function(e) {
+                if (e.target === this) closeAdminBorrowModal();
+            });
         });
+
+        // 随机分配借阅者
+        function assignRandomBorrowers() {
+            // 重置所有图书状态
+            books.forEach(book => {
+                book.status = "available";
+                delete book.borrower;
+                delete book.borrowDate;
+            });
+            
+            // 随机选择5本书并分配借阅者
+            const availableBooks = [...books];
+            const shuffledBorrowers = [...borrowers].sort(() => 0.5 - Math.random());
+            
+            for (let i = 0; i < 5; i++) {
+                if (availableBooks.length === 0) break;
+                
+                const randomIndex = Math.floor(Math.random() * availableBooks.length);
+                const book = availableBooks.splice(randomIndex, 1)[0];
+                
+                book.status = "borrowed";
+                book.borrower = shuffledBorrowers[i % shuffledBorrowers.length];
+                book.borrowDate = new Date(Date.now() - Math.floor(Math.random() * 30) * 24 * 60 * 60 * 1000)
+                    .toISOString().split('T')[0];
+                
+                // 添加到借阅记录
+                borrowRecords.push({
+                    bookId: book.id,
+                    bookTitle: book.title,
+                    bookAuthor: book.author,
+                    borrower: book.borrower,
+                    borrowDate: book.borrowDate,
+                    status: "借阅中"
+                });
+            }
+            
+            currentBooks = [...books];
+        }
 
         // 渲染图书列表
         function renderBooks(booksToRender) {
             const booksGrid = document.getElementById('booksGrid');
             booksGrid.innerHTML = '';
+            
+            if (booksToRender.length === 0) {
+                booksGrid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #777;">未找到相关图书</p>';
+                return;
+            }
             
             booksToRender.forEach(book => {
                 const bookCard = document.createElement('div');
@@ -612,10 +830,42 @@
             document.getElementById('modalBookImage').src = book.image;
             
             const statusElement = document.getElementById('modalStatus');
-            statusElement.textContent = book.status === 'available' ? '可借阅' : '已借出';
-            statusElement.className = book.status === 'available' ? 'available' : 'borrowed';
+            const borrowerInfo = document.getElementById('borrowerInfo');
+            const borrowBtn = document.getElementById('borrowBtn');
+            const returnBtn = document.getElementById('returnBtn');
+            
+            if (book.status === 'available') {
+                statusElement.textContent = '可借阅';
+                statusElement.className = 'available';
+                borrowerInfo.style.display = 'none';
+                borrowBtn.style.display = 'inline-block';
+                returnBtn.style.display = 'none';
+                
+                // 管理员借书显示不同按钮
+                if (isAdminMode) {
+                    borrowBtn.textContent = '管理员借书';
+                } else {
+                    borrowBtn.textContent = '借阅';
+                }
+            } else {
+                statusElement.textContent = '已借出';
+                statusElement.className = 'borrowed';
+                document.getElementById('modalBorrower').textContent = book.borrower;
+                borrowerInfo.style.display = 'block';
+                borrowBtn.style.display = 'none';
+                
+                // 只有管理员可以还书
+                if (isAdminMode) {
+                    returnBtn.style.display = 'inline-block';
+                } else {
+                    returnBtn.style.display = 'none';
+                }
+            }
             
             document.getElementById('bookModal').style.display = 'flex';
+            
+            // 保存当前图书ID
+            currentBookId = book.id;
         }
 
         // 关闭图书详情模态框
@@ -627,7 +877,8 @@
         function searchBooks() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
             if (!searchTerm) {
-                renderBooks(books);
+                currentBooks = [...books];
+                renderBooks(currentBooks);
                 return;
             }
             
@@ -636,7 +887,106 @@
                 book.author.toLowerCase().includes(searchTerm)
             );
             
-            renderBooks(filteredBooks);
+            currentBooks = filteredBooks;
+            renderBooks(currentBooks);
+        }
+
+        // 借阅图书
+        function borrowBook() {
+            // 如果是管理员，打开管理员借书模态框
+            if (isAdminMode) {
+                const book = books.find(b => b.id === currentBookId);
+                if (book && book.status === 'available') {
+                    document.getElementById('adminBorrowBookTitle').textContent = `《${book.title}》`;
+                    document.getElementById('borrowerName').value = '';
+                    document.getElementById('adminBorrowModal').style.display = 'flex';
+                }
+            } 
+            // 普通用户借阅
+            else if (currentUser && currentUser.role === 'user') {
+                const book = books.find(b => b.id === currentBookId);
+                if (book && book.status === 'available') {
+                    book.status = 'borrowed';
+                    book.borrower = currentUser.name;
+                    book.borrowDate = new Date().toISOString().split('T')[0];
+                    
+                    // 添加到借阅记录
+                    borrowRecords.push({
+                        bookId: book.id,
+                        bookTitle: book.title,
+                        bookAuthor: book.author,
+                        borrower: book.borrower,
+                        borrowDate: book.borrowDate,
+                        status: "借阅中"
+                    });
+                    
+                    alert(`《${book.title}》借阅成功！`);
+                    renderBooks(currentBooks);
+                    updateStatistics();
+                    closeBookModal();
+                }
+            }
+        }
+
+        // 管理员借书
+        function submitAdminBorrow() {
+            const borrowerName = document.getElementById('borrowerName').value.trim();
+            if (!borrowerName) {
+                alert('请输入借阅者姓名！');
+                return;
+            }
+            
+            const book = books.find(b => b.id === currentBookId);
+            if (book && book.status === 'available') {
+                book.status = 'borrowed';
+                book.borrower = borrowerName;
+                book.borrowDate = new Date().toISOString().split('T')[0];
+                
+                // 添加到借阅记录
+                borrowRecords.push({
+                    bookId: book.id,
+                    bookTitle: book.title,
+                    bookAuthor: book.author,
+                    borrower: book.borrower,
+                    borrowDate: book.borrowDate,
+                    status: "借阅中"
+                });
+                
+                alert(`《${book.title}》已借阅给 ${borrowerName}`);
+                renderBooks(currentBooks);
+                updateStatistics();
+                closeAdminBorrowModal();
+                closeBookModal();
+            }
+        }
+
+        // 关闭管理员借书模态框
+        function closeAdminBorrowModal() {
+            document.getElementById('adminBorrowModal').style.display = 'none';
+        }
+
+        // 还书
+        function returnBook() {
+            const book = books.find(b => b.id === currentBookId);
+            
+            if (book && book.status === 'borrowed') {
+                book.status = 'available';
+                
+                // 更新借阅记录状态
+                const record = borrowRecords.find(r => r.bookId === currentBookId && r.status === "借阅中");
+                if (record) {
+                    record.status = "已归还";
+                    record.returnDate = new Date().toISOString().split('T')[0];
+                }
+                
+                delete book.borrower;
+                delete book.borrowDate;
+                
+                alert(`《${book.title}》还书成功！`);
+                renderBooks(currentBooks);
+                updateStatistics();
+                closeBookModal();
+            }
         }
 
         // 打开登录模态框
@@ -662,6 +1012,7 @@
                 document.getElementById('loginBtn').style.display = 'none';
                 document.getElementById('logoutBtn').style.display = 'inline-block';
                 document.getElementById('adminBtn').style.display = 'inline-block';
+                document.getElementById('adminControls').style.display = 'flex';
                 alert('管理员登录成功！');
                 closeLoginModal();
                 document.getElementById('autoLoginModal').style.display = 'none';
@@ -670,6 +1021,7 @@
                 document.getElementById('userName').textContent = '普通用户';
                 document.getElementById('loginBtn').style.display = 'none';
                 document.getElementById('logoutBtn').style.display = 'inline-block';
+                document.getElementById('adminControls').style.display = 'none';
                 alert('用户登录成功！');
                 closeLoginModal();
                 document.getElementById('autoLoginModal').style.display = 'none';
@@ -687,6 +1039,7 @@
             document.getElementById('logoutBtn').style.display = 'none';
             document.getElementById('adminBtn').style.display = 'none';
             document.getElementById('adminControls').style.display = 'none';
+            document.getElementById('adminBtn').textContent = '管理员模式';
             alert('已登出！');
             renderBooks(books);
         }
@@ -696,12 +1049,10 @@
             isAdminMode = !isAdminMode;
             if (isAdminMode) {
                 document.getElementById('adminBtn').textContent = '退出管理员模式';
-                document.getElementById('adminControls').style.display = 'flex';
             } else {
                 document.getElementById('adminBtn').textContent = '管理员模式';
-                document.getElementById('adminControls').style.display = 'none';
             }
-            renderBooks(books);
+            renderBooks(currentBooks);
         }
 
         // 打开添加图书模态框
@@ -715,7 +1066,7 @@
             document.getElementById('bookTitle').value = '';
             document.getElementById('bookAuthor').value = '';
             document.getElementById('bookPublisher').value = '';
-            document.getElementById('bookCategory').value = '';
+            document.getElementById('bookCategory').value = '文学小说';
             document.getElementById('bookImage').value = '';
         }
 
@@ -744,7 +1095,8 @@
             };
             
             books.push(newBook);
-            renderBooks(books);
+            currentBooks = [...books];
+            renderBooks(currentBooks);
             updateStatistics();
             alert('图书添加成功！');
             closeAddBookModal();
@@ -754,7 +1106,8 @@
         function deleteBook(bookId) {
             if (confirm('确定要删除这本图书吗？')) {
                 books = books.filter(book => book.id !== bookId);
-                renderBooks(books);
+                currentBooks = currentBooks.filter(book => book.id !== bookId);
+                renderBooks(currentBooks);
                 updateStatistics();
                 alert('图书删除成功！');
             }
@@ -762,8 +1115,12 @@
 
         // 按分类筛选图书
         function filterByCategory(category) {
-            const filteredBooks = books.filter(book => book.category === category);
-            renderBooks(filteredBooks);
+            if (category === '全部') {
+                currentBooks = [...books];
+            } else {
+                currentBooks = books.filter(book => book.category === category);
+            }
+            renderBooks(currentBooks);
         }
 
         // 更新统计信息
@@ -775,6 +1132,78 @@
             document.getElementById('totalBooks').textContent = totalBooks;
             document.getElementById('availableBooks').textContent = availableBooks;
             document.getElementById('borrowedBooks').textContent = borrowedBooks;
+        }
+
+        // 显示页面
+        function showPage(page) {
+            // 隐藏所有页面
+            document.querySelectorAll('.page-content').forEach(p => {
+                p.classList.add('hidden');
+            });
+            
+            // 显示指定页面
+            document.getElementById(`${page}-page`).classList.remove('hidden');
+            
+            // 如果是借阅记录页面，更新记录
+            if (page === 'records') {
+                renderBorrowRecords();
+            }
+        }
+
+        // 渲染借阅记录
+        function renderBorrowRecords() {
+            const recordsBody = document.getElementById('recordsBody');
+            const emptyRecords = document.getElementById('emptyRecords');
+            
+            if (borrowRecords.length === 0) {
+                recordsBody.innerHTML = '';
+                emptyRecords.style.display = 'block';
+                return;
+            }
+            
+            emptyRecords.style.display = 'none';
+            recordsBody.innerHTML = '';
+            
+            borrowRecords.forEach(record => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${record.bookTitle}</td>
+                    <td>${record.bookAuthor}</td>
+                    <td>${record.borrower}</td>
+                    <td>${record.borrowDate}</td>
+                    <td>${record.status}</td>
+                    <td>
+                        ${record.status === "借阅中" && isAdminMode ? 
+                            `<button class="btn btn-return" onclick="adminReturnBook(${record.bookId})">还书</button>` : 
+                            ''}
+                    </td>
+                `;
+                recordsBody.appendChild(row);
+            });
+        }
+
+        // 管理员还书
+        function adminReturnBook(bookId) {
+            const book = books.find(b => b.id === bookId);
+            
+            if (book && book.status === 'borrowed') {
+                book.status = 'available';
+                
+                // 更新借阅记录状态
+                const record = borrowRecords.find(r => r.bookId === bookId && r.status === "借阅中");
+                if (record) {
+                    record.status = "已归还";
+                    record.returnDate = new Date().toISOString().split('T')[0];
+                }
+                
+                delete book.borrower;
+                delete book.borrowDate;
+                
+                alert(`《${book.title}》还书成功！`);
+                renderBooks(currentBooks);
+                updateStatistics();
+                renderBorrowRecords();
+            }
         }
     </script>
 </body>
