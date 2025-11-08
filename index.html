@@ -3,11 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>图书管理系统 - 在线图书借阅平台</title>
-    <meta name="description" content="一个功能完整的图书管理系统，支持图书浏览、搜索、借阅和管理">
-    <meta name="keywords" content="图书管理,图书馆,借书系统,在线图书,图书借阅">
+    <title>图书管理系统 - 用户管理增强版</title>
+    <meta name="description" content="一个功能完整的图书管理系统，支持图书浏览、搜索、借阅和用户管理">
+    <meta name="keywords" content="图书管理,图书馆,借书系统,在线图书,图书借阅,用户管理">
     <meta property="og:title" content="图书管理系统">
-    <meta property="og:description" content="一个功能完整的图书管理系统，支持图书浏览、搜索、借阅和管理">
+    <meta property="og:description" content="一个功能完整的图书管理系统，支持图书浏览、搜索、借阅和用户管理">
     <meta property="og:type" content="website">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -37,6 +37,8 @@
         .btn-delete:hover { background: #c0392b; }
         .btn-return { background: #f39c12; color: white; }
         .btn-return:hover { background: #e67e22; }
+        .btn-edit { background: #3498db; color: white; }
+        .btn-edit:hover { background: #2980b9; }
         
         .search-box { background: white; padding: 1.5rem; border-radius: 8px; margin: 1.5rem 0; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
         .search-container { display: flex; }
@@ -61,7 +63,7 @@
         .book-status { display: inline-block; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.8rem; }
         .available { background: #e8f6f3; color: #27ae60; }
         .borrowed { background: #fdedec; color: #e74c3c; }
-        .admin-controls { display: flex; justify-content: flex-end; margin-bottom: 1rem; }
+        .admin-controls { display: flex; justify-content: flex-end; margin-bottom: 1rem; gap: 10px; }
         .book-actions { display: flex; justify-content: space-between; margin-top: 0.5rem; }
         
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
@@ -202,6 +204,49 @@
             color: #3498db !important;
             font-weight: bold;
         }
+        
+        /* 用户管理页面样式 */
+        .user-management {
+            margin-top: 2rem;
+        }
+        
+        .user-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        }
+        
+        .user-table th, .user-table td {
+            padding: 0.8rem;
+            text-align: left;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .user-table th {
+            background: #f8f9fa;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        .user-table tr:hover {
+            background: #f8f9fa;
+        }
+        
+        .user-actions {
+            display: flex;
+            gap: 5px;
+        }
+        
+        .empty-users {
+            text-align: center;
+            padding: 2rem;
+            color: #777;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -237,6 +282,7 @@
             <div class="admin-controls" id="adminControls" style="display:none">
                 <button class="btn btn-add" id="addBookBtn">添加图书</button>
                 <button class="btn btn-admin" id="viewRecordsBtn">查看借阅记录</button>
+                <button class="btn btn-admin" id="viewUsersBtn">用户管理</button>
             </div>
 
             <div class="main-content">
@@ -297,8 +343,32 @@
         
         <!-- 用户管理页面 -->
         <div id="users-page" class="page-content hidden">
-            <h2>用户管理</h2>
-            <p style="margin-top: 1rem; color: #666;">用户管理功能正在开发中...</p>
+            <div class="user-management">
+                <h2>用户管理</h2>
+                <div class="admin-controls">
+                    <button class="btn btn-add" id="addUserBtn">添加用户</button>
+                </div>
+                <div id="usersContainer">
+                    <table class="user-table">
+                        <thead>
+                            <tr>
+                                <th>用户名</th>
+                                <th>角色</th>
+                                <th>手机号</th>
+                                <th>邮箱</th>
+                                <th>注册时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersBody">
+                            <!-- 用户列表将通过JavaScript动态生成 -->
+                        </tbody>
+                    </table>
+                    <div id="emptyUsers" class="empty-users">
+                        暂无用户数据
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -446,6 +516,47 @@
                     <div class="action-buttons">
                         <button class="btn btn-primary" id="submitAdminBorrow">确认借书</button>
                         <button class="btn btn-secondary" id="cancelAdminBorrow">取消</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 添加/编辑用户模态框 -->
+    <div class="modal" id="userModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="userModalTitle">添加用户</h2>
+                <button class="modal-close" id="userModalClose">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="login-form">
+                    <div class="form-group">
+                        <label for="userUsername">用户名</label>
+                        <input type="text" id="userUsername" placeholder="请输入用户名">
+                    </div>
+                    <div class="form-group">
+                        <label for="userPassword">密码</label>
+                        <input type="password" id="userPassword" placeholder="请输入密码">
+                    </div>
+                    <div class="form-group">
+                        <label for="userRole">角色</label>
+                        <select id="userRole">
+                            <option value="user">普通用户</option>
+                            <option value="admin">管理员</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="userPhone">手机号</label>
+                        <input type="text" id="userPhone" placeholder="请输入手机号">
+                    </div>
+                    <div class="form-group">
+                        <label for="userEmail">邮箱</label>
+                        <input type="email" id="userEmail" placeholder="请输入邮箱">
+                    </div>
+                    <div class="action-buttons">
+                        <button class="btn btn-primary" id="submitUser">保存</button>
+                        <button class="btn btn-secondary" id="cancelUser">取消</button>
                     </div>
                 </div>
             </div>
@@ -629,6 +740,46 @@
         // 借阅记录
         let borrowRecords = [];
         
+        // 用户数据 - 扩展用户信息
+        let users = [
+            {
+                id: 1,
+                username: "admin",
+                password: "admin",
+                role: "admin",
+                phone: "13800138000",
+                email: "admin@library.com",
+                registerDate: "2023-01-01"
+            },
+            {
+                id: 2,
+                username: "user",
+                password: "user",
+                role: "user",
+                phone: "13900139000",
+                email: "user@library.com",
+                registerDate: "2023-01-02"
+            },
+            {
+                id: 3,
+                username: "张小明",
+                password: "123456",
+                role: "user",
+                phone: "13700137000",
+                email: "zhang@library.com",
+                registerDate: "2023-02-15"
+            },
+            {
+                id: 4,
+                username: "李思思",
+                password: "123456",
+                role: "user",
+                phone: "13600136000",
+                email: "li@library.com",
+                registerDate: "2023-03-10"
+            }
+        ];
+        
         // 用户状态
         let currentUser = null;
         let isAdminMode = false;
@@ -637,6 +788,8 @@
         let currentBooks = [...books];
         // 当前选中的图书ID（用于管理员借书）
         let currentBookId = null;
+        // 当前编辑的用户ID
+        let currentEditUserId = null;
 
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
@@ -739,12 +892,28 @@
                 document.querySelector('.nav-link[data-page="records"]').classList.add('active');
             });
             
+            // 查看用户管理按钮
+            document.getElementById('viewUsersBtn').addEventListener('click', function() {
+                showPage('users');
+                document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+                document.querySelector('.nav-link[data-page="users"]').classList.add('active');
+            });
+            
             // 管理员借书模态框
             document.getElementById('adminBorrowClose').addEventListener('click', closeAdminBorrowModal);
             document.getElementById('cancelAdminBorrow').addEventListener('click', closeAdminBorrowModal);
             document.getElementById('submitAdminBorrow').addEventListener('click', submitAdminBorrow);
             document.getElementById('adminBorrowModal').addEventListener('click', function(e) {
                 if (e.target === this) closeAdminBorrowModal();
+            });
+            
+            // 用户管理功能
+            document.getElementById('addUserBtn').addEventListener('click', openAddUserModal);
+            document.getElementById('userModalClose').addEventListener('click', closeUserModal);
+            document.getElementById('cancelUser').addEventListener('click', closeUserModal);
+            document.getElementById('submitUser').addEventListener('click', submitUser);
+            document.getElementById('userModal').addEventListener('click', function(e) {
+                if (e.target === this) closeUserModal();
             });
         });
 
@@ -1006,27 +1175,34 @@
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
-            if (username === 'admin' && password === 'admin') {
-                currentUser = {name: '管理员', role: 'admin'};
-                document.getElementById('userName').textContent = '管理员';
+            // 在用户列表中查找匹配的用户
+            const user = users.find(u => u.username === username && u.password === password);
+            
+            if (user) {
+                currentUser = {
+                    id: user.id,
+                    name: user.username,
+                    role: user.role,
+                    phone: user.phone,
+                    email: user.email
+                };
+                
+                document.getElementById('userName').textContent = user.username;
                 document.getElementById('loginBtn').style.display = 'none';
                 document.getElementById('logoutBtn').style.display = 'inline-block';
-                document.getElementById('adminBtn').style.display = 'inline-block';
-                document.getElementById('adminControls').style.display = 'flex';
-                alert('管理员登录成功！');
-                closeLoginModal();
-                document.getElementById('autoLoginModal').style.display = 'none';
-            } else if (username === 'user' && password === 'user') {
-                currentUser = {name: '普通用户', role: 'user'};
-                document.getElementById('userName').textContent = '普通用户';
-                document.getElementById('loginBtn').style.display = 'none';
-                document.getElementById('logoutBtn').style.display = 'inline-block';
-                document.getElementById('adminControls').style.display = 'none';
-                alert('用户登录成功！');
+                
+                if (user.role === 'admin') {
+                    document.getElementById('adminBtn').style.display = 'inline-block';
+                    document.getElementById('adminControls').style.display = 'flex';
+                } else {
+                    document.getElementById('adminControls').style.display = 'none';
+                }
+                
+                alert(`${user.role === 'admin' ? '管理员' : '用户'}登录成功！`);
                 closeLoginModal();
                 document.getElementById('autoLoginModal').style.display = 'none';
             } else {
-                alert('用户名或密码错误！请使用"admin"或"user"作为用户名和密码。');
+                alert('用户名或密码错误！');
             }
         }
 
@@ -1148,6 +1324,11 @@
             if (page === 'records') {
                 renderBorrowRecords();
             }
+            
+            // 如果是用户管理页面，更新用户列表
+            if (page === 'users') {
+                renderUsers();
+            }
         }
 
         // 渲染借阅记录
@@ -1203,6 +1384,145 @@
                 renderBooks(currentBooks);
                 updateStatistics();
                 renderBorrowRecords();
+            }
+        }
+
+        // 渲染用户列表
+        function renderUsers() {
+            const usersBody = document.getElementById('usersBody');
+            const emptyUsers = document.getElementById('emptyUsers');
+            
+            if (users.length === 0) {
+                usersBody.innerHTML = '';
+                emptyUsers.style.display = 'block';
+                return;
+            }
+            
+            emptyUsers.style.display = 'none';
+            usersBody.innerHTML = '';
+            
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${user.username}</td>
+                    <td>${user.role === 'admin' ? '管理员' : '普通用户'}</td>
+                    <td>${user.phone || '未设置'}</td>
+                    <td>${user.email || '未设置'}</td>
+                    <td>${user.registerDate}</td>
+                    <td>
+                        <div class="user-actions">
+                            <button class="btn btn-edit" onclick="editUser(${user.id})">编辑</button>
+                            ${user.id !== currentUser.id ? 
+                                `<button class="btn btn-delete" onclick="deleteUser(${user.id})">删除</button>` : 
+                                ''}
+                        </div>
+                    </td>
+                `;
+                usersBody.appendChild(row);
+            });
+        }
+
+        // 打开添加用户模态框
+        function openAddUserModal() {
+            currentEditUserId = null;
+            document.getElementById('userModalTitle').textContent = '添加用户';
+            document.getElementById('userUsername').value = '';
+            document.getElementById('userPassword').value = '';
+            document.getElementById('userRole').value = 'user';
+            document.getElementById('userPhone').value = '';
+            document.getElementById('userEmail').value = '';
+            document.getElementById('userModal').style.display = 'flex';
+        }
+
+        // 编辑用户
+        function editUser(userId) {
+            const user = users.find(u => u.id === userId);
+            if (user) {
+                currentEditUserId = userId;
+                document.getElementById('userModalTitle').textContent = '编辑用户';
+                document.getElementById('userUsername').value = user.username;
+                document.getElementById('userPassword').value = user.password;
+                document.getElementById('userRole').value = user.role;
+                document.getElementById('userPhone').value = user.phone || '';
+                document.getElementById('userEmail').value = user.email || '';
+                document.getElementById('userModal').style.display = 'flex';
+            }
+        }
+
+        // 关闭用户模态框
+        function closeUserModal() {
+            document.getElementById('userModal').style.display = 'none';
+        }
+
+        // 提交用户信息（添加或编辑）
+        function submitUser() {
+            const username = document.getElementById('userUsername').value.trim();
+            const password = document.getElementById('userPassword').value;
+            const role = document.getElementById('userRole').value;
+            const phone = document.getElementById('userPhone').value.trim();
+            const email = document.getElementById('userEmail').value.trim();
+            
+            if (!username || !password) {
+                alert('用户名和密码是必填项！');
+                return;
+            }
+            
+            // 检查用户名是否已存在（添加用户时）
+            if (!currentEditUserId && users.some(u => u.username === username)) {
+                alert('用户名已存在！');
+                return;
+            }
+            
+            if (currentEditUserId) {
+                // 编辑现有用户
+                const userIndex = users.findIndex(u => u.id === currentEditUserId);
+                if (userIndex !== -1) {
+                    users[userIndex].username = username;
+                    users[userIndex].password = password;
+                    users[userIndex].role = role;
+                    users[userIndex].phone = phone;
+                    users[userIndex].email = email;
+                    
+                    // 如果编辑的是当前登录用户，更新显示
+                    if (currentUser.id === currentEditUserId) {
+                        currentUser.name = username;
+                        document.getElementById('userName').textContent = username;
+                    }
+                    
+                    alert('用户信息更新成功！');
+                }
+            } else {
+                // 添加新用户
+                const newUser = {
+                    id: users.length + 1,
+                    username,
+                    password,
+                    role,
+                    phone,
+                    email,
+                    registerDate: new Date().toISOString().split('T')[0]
+                };
+                
+                users.push(newUser);
+                alert('用户添加成功！');
+            }
+            
+            renderUsers();
+            closeUserModal();
+        }
+
+        // 删除用户
+        function deleteUser(userId) {
+            if (confirm('确定要删除这个用户吗？此操作不可恢复！')) {
+                // 不能删除当前登录用户
+                if (userId === currentUser.id) {
+                    alert('不能删除当前登录的用户！');
+                    return;
+                }
+                
+                users = users.filter(user => user.id !== userId);
+                renderUsers();
+                alert('用户删除成功！');
             }
         }
     </script>
